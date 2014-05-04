@@ -51,25 +51,23 @@ left = [[centerx-225, centery-25], [centerx-75, centery+50], [centerx-75, center
 #handLeft = pygame.transform.flip(handScaled, True, False)
 #handDown = pygame.transform.rotate(handScaled, -90)
 #handUp = pygame.transform.rotate(handScaled, 90)
-leftOpen = pygame.transform.scale(pygame.image.load('leftOpen.png'), MOVE_SIZE)
-leftClosed = pygame.transform.scale(pygame.image.load('leftClosed.png'), MOVE_SIZE)
-rightOpen = pygame.transform.scale(pygame.image.load('rightOpen.png'), MOVE_SIZE)
-rightClosed = pygame.transform.scale(pygame.image.load('rightClosed.png'), MOVE_SIZE)
+handOpen = pygame.transform.scale(pygame.image.load('open.png'), MOVE_SIZE)
+handClose = pygame.transform.scale(pygame.image.load('closed.png'), MOVE_SIZE)
 feetOpen = pygame.transform.scale(pygame.image.load('feetOne.png'), MOVE_SIZE)
 feetClosed = pygame.transform.scale(pygame.image.load('feetTwo.png'), MOVE_SIZE)
-#leftOpen = pygame.transform.rotate(handOpen, 90)
-#rightOpen = pygame.transform.flip(pygame.transform.rotate(handOpen, -90), False, True)
-#leftClose = pygame.transform.rotate(handClose, 90)
-#rightClose = pygame.transform.flip(pygame.transform.rotate(handClose, -90), False, True)
+leftOpen = pygame.transform.rotate(handOpen, 90)
+rightOpen = pygame.transform.flip(pygame.transform.rotate(handOpen, -90), False, True)
+leftClose = pygame.transform.rotate(handClose, 90)
+rightClose = pygame.transform.flip(pygame.transform.rotate(handClose, -90), False, True)
 
 
 #Dictionaries
-handRight = {'open':rightOpen, 'close':rightClosed}
-handLeft = {'open':leftOpen, 'close':leftClosed}
+handRight = {'open':rightOpen, 'close':rightClose}
+handLeft = {'open':leftOpen, 'close':leftClose}
 feet = {'open':feetOpen, 'close':feetClosed}
 moves = {'right':handRight, 'left':handLeft, 'up':feet}
 colors = {'right':RED, 'left':BLUE, 'up':GREEN}
-colorsXY = {'up': (0, 0, WIDTH, 500), 'left': (0, 0, 500, HEIGHT), 'right': (WIDTH-500, 0, 500, HEIGHT)}
+colorsXY = {'up': (0, 0, WIDTH, 200), 'left': (0, 0, 200, HEIGHT), 'right': (WIDTH-200, 0, 200, HEIGHT)}
 
 #Buttons
 
