@@ -1,13 +1,18 @@
+import math
 from math import pi
 import pygame, pygbutton, sys
 from pygame.locals import *
+import gradients
 
 FPS = 30
 pygame.init()
 
-size = [700, 700]
+WIDTH  = 700
+HEIGHT = 700
+
+size = [WIDTH, HEIGHT]
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption('Training')
+#pygame.display.set_caption('Training')
 
 #Colors
 BLACK = (  0,   0,   0)
@@ -16,10 +21,9 @@ BLUE =  (  0,   0, 255)
 GREEN = (  0, 255,   0)
 RED =   (255,   0,   0)
 GREY =  (192, 192, 192)
+MOVE_SIZE = (500, 500)
 
-
-# Display some text
-font = pygame.font.Font(None, 36)
+#Background
 
 background = pygame.Surface(screen.get_size())
 background = background.convert()
@@ -27,27 +31,46 @@ background.fill(WHITE)
 centerx = background.get_rect().centerx
 centery = background.get_rect().centery
 
-text = font.render("UP", 1, BLACK)
-textpos = text.get_rect()
-textpos.centerx = centerx
-textpos.centery = 50
-background.blit(text, textpos)
+#Boxes
 
 boxUp = [centerx-75, centerx+75, centery-100, centery-250]
 boxRight = [centerx+75, centerx+255, centery+50, centery-100]
 boxDown = [centerx-75, centerx+75, centery+200, centery+50]
 boxLeft = [centerx-225, centerx-75, centery+50, centery-100]
 
+#Arrow positions
+
 up = [[centerx, centery-250], [centerx-75, centery-100], [centerx+75, centery-100]]
 right = [[centerx+225, centery-25], [centerx+75, centery+50], [centerx+75, centery-100]]
 down = [[centerx, centery+200], [centerx-75, centery+50], [centerx+75, centery+50]]
 left = [[centerx-225, centery-25], [centerx-75, centery+50], [centerx-75, centery-100]]
-hand = pygame.image.load('hand.png')
-handScaled = pygame.transform.scale(hand, (400, 200))
-handRight = handScaled
-handLeft = pygame.transform.flip(handScaled, True, False)
-handDown = pygame.transform.rotate(handScaled, -90)
-handUp = pygame.transform.rotate(handScaled, 90)
+
+#Hands
+#hand = pygame.image.load('hand.png')
+#handScaled = pygame.transform.scale(hand, (400, 200))
+#handRight = handScaled
+#handLeft = pygame.transform.flip(handScaled, True, False)
+#handDown = pygame.transform.rotate(handScaled, -90)
+#handUp = pygame.transform.rotate(handScaled, 90)
+handOpen = pygame.transform.scale(pygame.image.load('open.png'), MOVE_SIZE)
+handClose = pygame.transform.scale(pygame.image.load('closed.png'), MOVE_SIZE)
+feetOpen = pygame.transform.scale(pygame.image.load('feetOne.png'), MOVE_SIZE)
+feetClosed = pygame.transform.scale(pygame.image.load('feetTwo.png'), MOVE_SIZE)
+leftOpen = pygame.transform.rotate(handOpen, 90)
+rightOpen = pygame.transform.flip(pygame.transform.rotate(handOpen, -90), False, True)
+leftClose = pygame.transform.rotate(handClose, 90)
+rightClose = pygame.transform.flip(pygame.transform.rotate(handClose, -90), False, True)
+
+
+#Dictionaries
+handRight = {'open':rightOpen, 'close':rightClose}
+handLeft = {'open':leftOpen, 'close':leftClose}
+feet = {'open':feetOpen, 'close':feetClosed}
+moves = {'right':handRight, 'left':handLeft, 'up':feet}
+colors = {'right':RED, 'left':BLUE, 'up':GREEN}
+colorsXY = {'up': (0, 0, WIDTH, 100), 'left': (0, 0, 100, HEIGHT), 'right': (WIDTH-100, 0, 100, HEIGHT)}
+
+#Buttons
 
 buttonTrain = pygbutton.PygButton((centerx-80, 600, 70, 30), 'Train')
 buttonPractice = pygbutton.PygButton((centerx+10, 600, 70, 30), 'Practice')
@@ -76,70 +99,68 @@ def drawLeft(color):
 def offArrows():
 	drawUp(GREY)
 	drawRight(GREY)
-	drawDown(GREY)
+	#drawDown(GREY)
 	drawLeft(GREY)
 
 def paintArrow(arrow, color):
 	pygame.draw.polygon(background, color, arrow)
 	pygame.draw.polygon(background, BLACK, arrow, 3)
 
+def clickArrow(move, arrow):
+	paintArrow(arrow, colors[move])
+
 def deactivateArrow():
 	if active != None:
 		paintArrow(active, GREY)
 
-def updateScreen():
-	screen.blit(background, (0,0))
-	pygame.display.flip()
+def paintMove(move, state, x, y):
+	move = moves[move][state]
+	background.blit(move, (x, y))
 
-def paintHand(hand, x, y):
-	background.blit(hand, (x, y))
+def paintColor(move):
+	pygame.draw.rect(background, colors[move], colorsXY[move])
 
 def resetTraining():
 	offArrows()
 	drawButtons()
 	updateScreen()
 
-def animateHand(hand):
+def animateMove(move):
 	background.fill(WHITE)
-	originX = centerx-(hand.get_width()/2)
-	originY = centery-(hand.get_height()/2)
-	handX = originX
-	handY = originY
+	moveX = centerx-(MOVE_SIZE[0]/2)
+	moveY = centery-(MOVE_SIZE[0]/2)
 	beginTime = pygame.time.get_ticks()
+	state = False
 	while(pygame.time.get_ticks()-beginTime < 5000):
 		background.fill(WHITE)
-		paintHand(hand, handX, handY)
-		if hand == handUp:
-			handY-=10
-			if handY <= 10:
-				handY = originY
-		elif hand == handDown:
-			handY+=10
-			if handY >= background.get_height()-10-hand.get_height():
-				handY = originY
-		elif hand == handLeft:
-			handX-=10
-			if handX <= 10:
-				handX = originX
+		if state:	
+			paintMove(move, 'close', moveX, moveY)
+			state = False
 		else:
-			handX+=10
-			if handX >= background.get_width()-10-hand.get_width():
-				handX = originX
+			paintMove(move, 'open', moveX, moveY)
+			state = True
+		paintColor(move)
+		writeTitle(move)
 		updateScreen()
+		pygame.time.delay(200)
 	background.fill(WHITE)
 	resetTraining()
 
+#def trainArrow(arrow):
+#	paintArrow(arrow, GREEN)
+#	screen.blit(background, (0,0))
+ #	pygame.display.flip()
+#	pygame.time.delay(5000)
+#	paintArrow(arrow, GREY)
+#	active = None
 
-def clickArrow(arrow):
-	paintArrow(arrow, RED)
-
-def trainArrow(arrow):
-	paintArrow(arrow, GREEN)
-	screen.blit(background, (0,0))
- 	pygame.display.flip()
-	pygame.time.delay(5000)
-	paintArrow(arrow, GREY)
-	active = None
+def writeTitle(title):
+	font = pygame.font.Font(None, 40)
+	text = font.render(title.upper(), 1, BLACK)
+	textpos = text.get_rect()
+	textpos.centerx = centerx
+	textpos.centery = 50
+	background.blit(text, textpos)
 
 def getBox(arrow):
 	if arrow == up:
@@ -167,7 +188,12 @@ def isCollision(arrow, pos):
 	else:
 		return False
 
+def updateScreen():
+	screen.blit(background, (0,0))
+	pygame.display.flip()
+
 resetTraining()
+updateScreen()
 
 done = False
 
@@ -191,42 +217,38 @@ while not done:
 	        ## check if cursor is on button ##
 	        if isCollision(up, pos):
 	        	deactivateArrow()
-	        	clickArrow(up)
+	        	clickArrow('up', up)
 	        	active = up
 	        elif isCollision(right, pos):
 	        	deactivateArrow()
-	        	clickArrow(right)
+	        	clickArrow('right', right)
 	        	active = right
-	        elif isCollision(down, pos):
-	        	deactivateArrow()
-	        	clickArrow(down)
-	        	active = down
+	        #elif isCollision(down, pos):
+	        #	deactivateArrow()
+	        #	clickArrow(down)
+	        #	active = down
 	        elif isCollision(left, pos):
 	        	deactivateArrow()
-	        	clickArrow(left)
+	        	clickArrow('left', left)
 	        	active = left
 	        elif len(eventTrain) > 0 and eventTrain[0] == 'enter' and active != None:
 	        	#trainArrow(active)
 	        	if active == up:
-	        		tempArrow = handUp
-	        	elif active == down:
-	        		tempArrow = handDown
+	        		tempMove = 'up'
 	        	elif active == left:
-	        		tempArrow = handLeft
+	        		tempMove = 'left'
 	        	elif active == right:
-	        		tempArrow = handRight
-	        	animateHand(tempArrow)
+	        		tempMove = 'right'
+	        	animateMove(tempMove)
 	        elif len(eventPractice) > 0 and eventPractice[0] == 'enter':
-	        	print('Train')
+	        	print('practice')
 
 
 
                 
  
 	screen.blit(background, (0,0))
- 
-    # This draws a triangle using the polygon command
-  
+
 
 	pygame.display.flip()
 

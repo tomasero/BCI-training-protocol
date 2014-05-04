@@ -5,7 +5,7 @@ from pygame.locals import *
 FPS = 30
 pygame.init()
 
-size = [700, 700]
+size = [800, 700]
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Training')
 
@@ -42,20 +42,7 @@ up = [[centerx, centery-250], [centerx-75, centery-100], [centerx+75, centery-10
 right = [[centerx+225, centery-25], [centerx+75, centery+50], [centerx+75, centery-100]]
 down = [[centerx, centery+200], [centerx-75, centery+50], [centerx+75, centery+50]]
 left = [[centerx-225, centery-25], [centerx-75, centery+50], [centerx-75, centery-100]]
-hand = pygame.image.load('hand.png')
-handScaled = pygame.transform.scale(hand, (400, 200))
-handRight = handScaled
-handLeft = pygame.transform.flip(handScaled, True, False)
-handDown = pygame.transform.rotate(handScaled, -90)
-handUp = pygame.transform.rotate(handScaled, 90)
 
-buttonTrain = pygbutton.PygButton((centerx-80, 600, 70, 30), 'Train')
-buttonPractice = pygbutton.PygButton((centerx+10, 600, 70, 30), 'Practice')
-
-
-def drawButtons():
-	buttonPractice.draw(background)
-	buttonTrain.draw(background)
 
 def drawUp(color):
 	pygame.draw.polygon(background, color, up)
@@ -80,55 +67,9 @@ def offArrows():
 	drawLeft(GREY)
 
 def paintArrow(arrow, color):
+	print(color)
 	pygame.draw.polygon(background, color, arrow)
 	pygame.draw.polygon(background, BLACK, arrow, 3)
-
-def deactivateArrow():
-	if active != None:
-		paintArrow(active, GREY)
-
-def updateScreen():
-	screen.blit(background, (0,0))
-	pygame.display.flip()
-
-def paintHand(hand, x, y):
-	background.blit(hand, (x, y))
-
-def resetTraining():
-	offArrows()
-	drawButtons()
-	updateScreen()
-
-def animateHand(hand):
-	background.fill(WHITE)
-	originX = centerx-(hand.get_width()/2)
-	originY = centery-(hand.get_height()/2)
-	handX = originX
-	handY = originY
-	beginTime = pygame.time.get_ticks()
-	while(pygame.time.get_ticks()-beginTime < 5000):
-		background.fill(WHITE)
-		paintHand(hand, handX, handY)
-		if hand == handUp:
-			handY-=10
-			if handY <= 10:
-				handY = originY
-		elif hand == handDown:
-			handY+=10
-			if handY >= background.get_height()-10-hand.get_height():
-				handY = originY
-		elif hand == handLeft:
-			handX-=10
-			if handX <= 10:
-				handX = originX
-		else:
-			handX+=10
-			if handX >= background.get_width()-10-hand.get_width():
-				handX = originX
-		updateScreen()
-	background.fill(WHITE)
-	resetTraining()
-
 
 def clickArrow(arrow):
 	paintArrow(arrow, RED)
@@ -167,7 +108,20 @@ def isCollision(arrow, pos):
 	else:
 		return False
 
-resetTraining()
+def deactivateArrows():
+	if active != None:
+		paintArrow(active, GREY)
+
+offArrows()
+
+
+buttonTrain = pygbutton.PygButton((centerx-80, 600, 70, 30), 'Train')
+buttonPractice = pygbutton.PygButton((centerx+10, 600, 70, 30), 'Practice')
+buttonPractice.draw(background)
+buttonTrain.draw(background)
+
+screen.blit(background, (0,0))
+pygame.display.flip()
 
 done = False
 
@@ -190,32 +144,23 @@ while not done:
 	        pos = pygame.mouse.get_pos()
 	        ## check if cursor is on button ##
 	        if isCollision(up, pos):
-	        	deactivateArrow()
+	        	deactivateArrows()
 	        	clickArrow(up)
 	        	active = up
 	        elif isCollision(right, pos):
-	        	deactivateArrow()
+	        	deactivateArrows()
 	        	clickArrow(right)
 	        	active = right
 	        elif isCollision(down, pos):
-	        	deactivateArrow()
+	        	deactivateArrows()
 	        	clickArrow(down)
 	        	active = down
 	        elif isCollision(left, pos):
-	        	deactivateArrow()
+	        	deactivateArrows()
 	        	clickArrow(left)
 	        	active = left
 	        elif len(eventTrain) > 0 and eventTrain[0] == 'enter' and active != None:
-	        	#trainArrow(active)
-	        	if active == up:
-	        		tempArrow = handUp
-	        	elif active == down:
-	        		tempArrow = handDown
-	        	elif active == left:
-	        		tempArrow = handLeft
-	        	elif active == right:
-	        		tempArrow = handRight
-	        	animateHand(tempArrow)
+	        	trainArrow(active)
 	        elif len(eventPractice) > 0 and eventPractice[0] == 'enter':
 	        	print('Train')
 
