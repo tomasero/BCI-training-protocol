@@ -1,4 +1,4 @@
-import pygame, pygbutton, sys, math, numpy
+import pygame, pygbutton, sys, math, numpy, time
 from math import pi
 from pygame.locals import *
 import gradients
@@ -57,6 +57,7 @@ rightOpen = pygame.transform.scale(pygame.image.load('rightOpen.png'), MOVE_SIZE
 rightClosed = pygame.transform.scale(pygame.image.load('rightClosed.png'), MOVE_SIZE)
 feetOpen = pygame.transform.scale(pygame.image.load('feetOne.png'), MOVE_SIZE)
 feetClosed = pygame.transform.scale(pygame.image.load('feetTwo.png'), MOVE_SIZE)
+spider = pygame.transform.scale(pygame.image.load('bciSpider.jpg'), (200, 200))
 #leftOpen = pygame.transform.rotate(handOpen, 90)
 #rightOpen = pygame.transform.flip(pygame.transform.rotate(handOpen, -90), False, True)
 #leftClose = pygame.transform.rotate(handClose, 90)
@@ -76,6 +77,8 @@ colorsXY = {'up': (0, 0, WIDTH, 500), 'left': (0, 0, 500, HEIGHT), 'right': (WID
 buttonTrain = pygbutton.PygButton((centerx-80, 600, 70, 30), 'Train')
 buttonPractice = pygbutton.PygButton((centerx+10, 600, 70, 30), 'Practice')
 
+def drawSpider():
+	background.blit(spider, (centerx-100, centery-110))
 
 def drawButtons():
 	buttonPractice.draw(background)
@@ -143,11 +146,14 @@ def getGradient(move, color, coor):
 		return gradients.horizontal(coor, begin, end)
 
 def resetTraining():
+	writeTitle('Battle Spider BCI Training Interface', 40)
+	drawSpider()
 	offArrows()
 	drawButtons()
 	updateScreen()
 
 def animateMove(move):
+	start = time.time()
 	background.fill(WHITE)
 	moveX = centerx-(MOVE_SIZE[0]/2)
 	moveY = centery-(MOVE_SIZE[0]/2)
@@ -162,9 +168,11 @@ def animateMove(move):
 		else:
 			paintMove(move, 'open', moveX, moveY)
 			state = True
-		writeTitle(move)
+		writeTitle(move, 70)
 		updateScreen()
 		pygame.time.delay(200)
+	end = time.time()
+	sendData(move, start, end)
 	background.fill(WHITE)
 	resetTraining()
 
@@ -176,8 +184,14 @@ def animateMove(move):
 #	paintArrow(arrow, GREY)
 #	active = None
 
-def writeTitle(title):
-	font = pygame.font.Font(None, 40)
+def sendData(move, start, end):
+	f = open('data.csv', 'a')
+	f.write('{0}, {1}, {2}'.format(move, start, end))
+	f.write('\n')
+	f.close()
+
+def writeTitle(title, size):
+	font = pygame.font.Font(None, size)
 	text = font.render(title.upper(), 1, BLACK)
 	textpos = text.get_rect()
 	textpos.centerx = centerx
