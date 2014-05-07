@@ -4,9 +4,9 @@ from pygame.locals import *
 import gradients
 
 
-#sys.path.append('../ClassyBCI')
-#from openbci_collector import *
-#collector = OpenBCICollector(port='/dev/tty.usbmodem1411')
+sys.path.append('../ClassyBCI')
+from openbci_collector import *
+collector = OpenBCICollector(port='/dev/tty.usbmodem1411')
 
 FPS = 30
 pygame.init()
@@ -243,18 +243,18 @@ def updateScreen():
 	screen.blit(background, (0,0))
 	pygame.display.flip()
 
-#def controlEEG(status):
-#	if status == 'start':
-#		collector.start_bg_collection()
-#	elif status == 'stop':
-#		collector.stop_bg_collection()
-#		collector.disconnect()
+def controlEEG(status):
+	if status == 'start':
+		collector.start_bg_collection()
+	elif status == 'stop':
+		collector.stop_bg_collection()
+		collector.disconnect()
 
-#def tag(status, name):
-#	if status == 'start':
-#		collector.tag_it(name)
-#	elif status == 'stop':
-#		collector.tag_it(None)
+def tag(status, name):
+	if status == 'start':
+		collector.tag_it(name)
+	elif status == 'stop':
+		collector.tag_it(None)
 
 
 resetTraining()
@@ -264,12 +264,12 @@ done = False
 
 active = None
 
-#controlEEG('start')
+controlEEG('start')
 while not done:
 	
 	for event in pygame.event.get():
 		if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-			#controlEEG('stop')
+			controlEEG('stop')
 			pygame.quit()
 			sys.exit()
 			done = True
@@ -309,10 +309,10 @@ while not done:
 				elif active == base:
 					tempMove = 'base'
 
-				#tag('start', tempMove)
+				tag('start', tempMove)
 				print(tempMove)
 				animateMove(tempMove)
-				#tag('stop', tempMove)
+				tag('stop', tempMove)
 			elif len(eventPractice) > 0 and eventPractice[0] == 'enter':
 				print('practice')
 
