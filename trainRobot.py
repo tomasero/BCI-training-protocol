@@ -3,6 +3,11 @@ from math import pi
 from pygame.locals import *
 import gradients
 
+
+#sys.path.append('../ClassyBCI')
+#from openbci_collector import *
+#collector = OpenBCICollector(port='/dev/tty.usbmodem1411')
+
 FPS = 30
 pygame.init()
 
@@ -34,15 +39,15 @@ centery = background.get_rect().centery
 
 boxUp = [centerx-75, centerx+75, centery-100, centery-250]
 boxRight = [centerx+75, centerx+255, centery+50, centery-100]
-boxDown = [centerx-75, centerx+75, centery+200, centery+50]
+boxBase = [centerx-75, centerx+75, centery+200, centery+50]
 boxLeft = [centerx-225, centerx-75, centery+50, centery-100]
 
 #Arrow positions
 
 up = [[centerx, centery-250], [centerx-75, centery-100], [centerx+75, centery-100]]
 right = [[centerx+225, centery-25], [centerx+75, centery+50], [centerx+75, centery-100]]
-down = [[centerx, centery+200], [centerx-75, centery+50], [centerx+75, centery+50]]
 left = [[centerx-225, centery-25], [centerx-75, centery+50], [centerx-75, centery-100]]
+base = [[centerx+75, centery+75], [centerx-75, centery+75], [centerx-75, centery+50], [centerx+75, centery+50]]
 
 #Hands
 #hand = pygame.image.load('hand.png')
@@ -69,16 +74,20 @@ handRight = {'open':rightOpen, 'close':rightClosed}
 handLeft = {'open':leftOpen, 'close':leftClosed}
 feet = {'open':feetOpen, 'close':feetClosed}
 moves = {'right':handRight, 'left':handLeft, 'up':feet}
-colors = {'right':RED, 'left':BLUE, 'up':GREEN}
-colorsXY = {'up': (0, 0, WIDTH, 500), 'left': (0, 0, 500, HEIGHT), 'right': (WIDTH-500, 0, 500, HEIGHT)}
+colors = {'right':RED, 'left':BLUE, 'up':GREEN, 'base': WHITE}
+colorsXY = {'up': (0, 0, WIDTH, 500), 'left': (0, 0, 500, HEIGHT), 'right': (WIDTH-500, 0, 500, HEIGHT), 'base': (0, 0, WIDTH, HEIGHT)}
 
 #Buttons
 
 buttonTrain = pygbutton.PygButton((centerx-80, 600, 70, 30), 'Train')
 buttonPractice = pygbutton.PygButton((centerx+10, 600, 70, 30), 'Practice')
 
+def drawBase(color):
+	pygame.draw.polygon(background, color, base)
+	pygame.draw.polygon(background, BLACK, base, 3)
+
 def drawSpider():
-	background.blit(spider, (centerx-100, centery-110))
+	background.blit(spider, (centerx-100, centery-120))
 
 def drawButtons():
 	buttonPractice.draw(background)
@@ -105,6 +114,7 @@ def offArrows():
 	drawRight(GREY)
 	#drawDown(GREY)
 	drawLeft(GREY)
+	drawBase(GREY)
 
 def paintArrow(arrow, color):
 	pygame.draw.polygon(background, color, arrow)
@@ -144,6 +154,10 @@ def getGradient(move, color, coor):
 		begin = white
 		end = theColor
 		return gradients.horizontal(coor, begin, end)
+	elif move == 'base':
+		begin = white
+		end = theColor
+		return gradients.horizontal(coor, begin, end)
 
 def resetTraining():
 	writeTitle('Battle Spider BCI Training Interface', 40)
@@ -153,7 +167,7 @@ def resetTraining():
 	updateScreen()
 
 def animateMove(move):
-	start = time.time()
+	#start = time.time()
 	background.fill(WHITE)
 	moveX = centerx-(MOVE_SIZE[0]/2)
 	moveY = centery-(MOVE_SIZE[0]/2)
@@ -162,17 +176,18 @@ def animateMove(move):
 	while(pygame.time.get_ticks()-beginTime < 5000):
 		background.fill(WHITE)
 		paintColor(move)
-		if state:	
-			paintMove(move, 'close', moveX, moveY)
-			state = False
-		else:
-			paintMove(move, 'open', moveX, moveY)
-			state = True
+		if move != 'base':
+			if state:	
+				paintMove(move, 'close', moveX, moveY)
+				state = False
+			else:
+				paintMove(move, 'open', moveX, moveY)
+				state = True
 		writeTitle(move, 70)
 		updateScreen()
 		pygame.time.delay(200)
-	end = time.time()
-	sendData(move, start, end)
+	#end = time.time()
+	#sendData(move, start, end)
 	background.fill(WHITE)
 	resetTraining()
 
@@ -184,11 +199,11 @@ def animateMove(move):
 #	paintArrow(arrow, GREY)
 #	active = None
 
-def sendData(move, start, end):
-	f = open('data.csv', 'a')
-	f.write('{0}, {1}, {2}'.format(move, start, end))
-	f.write('\n')
-	f.close()
+#def sendData(move, start, end):
+#	f = open('data.csv', 'a')
+#	f.write('{0}, {1}, {2}'.format(move, start, end))
+#	f.write('\n')
+#	f.close()
 
 def writeTitle(title, size):
 	font = pygame.font.Font(None, size)
@@ -203,8 +218,8 @@ def getBox(arrow):
 		return boxUp
 	elif arrow == right:
 		return boxRight
-	elif arrow == down:
-		return boxDown
+	elif arrow == base:
+		return boxBase
 	elif arrow == left:
 		return boxLeft
 
@@ -228,6 +243,20 @@ def updateScreen():
 	screen.blit(background, (0,0))
 	pygame.display.flip()
 
+#def controlEEG(status):
+#	if status == 'start':
+#		collector.start_bg_collection()
+#	elif status == 'stop':
+#		collector.stop_bg_collection()
+#		collector.disconnect()
+
+#def tag(status, name):
+#	if status == 'start':
+#		collector.tag_it(name)
+#	elif status == 'stop':
+#		collector.tag_it(None)
+
+
 resetTraining()
 updateScreen()
 
@@ -235,49 +264,57 @@ done = False
 
 active = None
 
-
+#controlEEG('start')
 while not done:
+	
 	for event in pygame.event.get():
-	    if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-	        pygame.quit()
-	        sys.exit()
-	        done = True
+		if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+			#controlEEG('stop')
+			pygame.quit()
+			sys.exit()
+			done = True
 		#elif 'click' in buttonTrain.handleEvent(event):
 		#	print("hola")
-	    elif event.type == pygame.MOUSEBUTTONUP:
+		elif event.type == pygame.MOUSEBUTTONUP:
 
-	    	eventPractice = buttonPractice.handleEvent(event)
-	    	eventTrain = buttonTrain.handleEvent(event)
-	        ## if mouse is pressed get position of cursor ##
-	        pos = pygame.mouse.get_pos()
-	        ## check if cursor is on button ##
-	        if isCollision(up, pos):
-	        	deactivateArrow()
-	        	clickArrow('up', up)
-	        	active = up
-	        elif isCollision(right, pos):
-	        	deactivateArrow()
-	        	clickArrow('right', right)
-	        	active = right
-	        #elif isCollision(down, pos):
-	        #	deactivateArrow()
-	        #	clickArrow(down)
-	        #	active = down
-	        elif isCollision(left, pos):
-	        	deactivateArrow()
-	        	clickArrow('left', left)
-	        	active = left
-	        elif len(eventTrain) > 0 and eventTrain[0] == 'enter' and active != None:
-	        	#trainArrow(active)
-	        	if active == up:
-	        		tempMove = 'up'
-	        	elif active == left:
-	        		tempMove = 'left'
-	        	elif active == right:
-	        		tempMove = 'right'
-	        	animateMove(tempMove)
-	        elif len(eventPractice) > 0 and eventPractice[0] == 'enter':
-	        	print('practice')
+			eventPractice = buttonPractice.handleEvent(event)
+			eventTrain = buttonTrain.handleEvent(event)
+			## if mouse is pressed get position of cursor ##
+			pos = pygame.mouse.get_pos()
+			## check if cursor is on button ##
+			if isCollision(up, pos):
+				deactivateArrow()
+				clickArrow('up', up)
+				active = up
+			elif isCollision(right, pos):
+				deactivateArrow()
+				clickArrow('right', right)
+				active = right
+			elif isCollision(base, pos):
+				deactivateArrow()
+				clickArrow('base', base)
+				active = base
+			elif isCollision(left, pos):
+				deactivateArrow()
+				clickArrow('left', left)
+				active = left
+			elif len(eventTrain) > 0 and eventTrain[0] == 'enter' and active != None:
+				#trainArrow(active)
+				if active == up:
+					tempMove = 'up'
+				elif active == left:
+					tempMove = 'left'
+				elif active == right:
+					tempMove = 'right'
+				elif active == base:
+					tempMove = 'base'
+
+				#tag('start', tempMove)
+				print(tempMove)
+				animateMove(tempMove)
+				#tag('stop', tempMove)
+			elif len(eventPractice) > 0 and eventPractice[0] == 'enter':
+				print('practice')
 
 
 	updateScreen()
