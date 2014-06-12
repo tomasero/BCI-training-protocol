@@ -3,7 +3,9 @@ from math import pi
 from pygame.locals import *
 import gradients
 
+#BCI training interface 
 
+#imports ClassyBCI
 sys.path.append('../ClassyBCI')
 from openbci_collector import *
 collector = OpenBCICollector(port='/dev/tty.usbmodem1411')
@@ -11,12 +13,11 @@ collector = OpenBCICollector(port='/dev/tty.usbmodem1411')
 FPS = 30
 pygame.init()
 
+#Width and height of screen
 WIDTH  = 700
 HEIGHT = 700
-
 size = [WIDTH, HEIGHT]
 screen = pygame.display.set_mode(size)
-#pygame.display.set_caption('Training')
 
 #Colors
 BLACK = (  0,   0,   0)
@@ -28,7 +29,6 @@ GREY =  (192, 192, 192)
 MOVE_SIZE = (500, 500)
 
 #Background
-
 background = pygame.Surface(screen.get_size())
 background = background.convert()
 background.fill(WHITE)
@@ -93,32 +93,15 @@ def drawButtons():
 	buttonPractice.draw(background)
 	buttonTrain.draw(background)
 
-def drawUp(color):
-	pygame.draw.polygon(background, color, up)
-	pygame.draw.polygon(background, BLACK, up, 3)
-
-def drawRight(color):
-	pygame.draw.polygon(background, color, right)
-	pygame.draw.polygon(background, BLACK, right, 3)
-
-def drawDown(color):
-	pygame.draw.polygon(background, color, down)
-	pygame.draw.polygon(background, BLACK, down, 3)
-
-def drawLeft(color):
-	pygame.draw.polygon(background, color, left)
-	pygame.draw.polygon(background, BLACK, left, 3)	
-
 def offArrows():
-	drawUp(GREY)
-	drawRight(GREY)
-	#drawDown(GREY)
-	drawLeft(GREY)
-	drawBase(GREY)
+	paintArrow(up, GREY)
+	paintArrow(right, GREY)
+	paintArrow(left, GREY)
+	paintArrow(base, GREY)
 
 def paintArrow(arrow, color):
 	pygame.draw.polygon(background, color, arrow)
-	pygame.draw.polygon(background, BLACK, arrow, 3)
+	pygame.draw.polygon(background, BLACK, arrow, 1)
 
 def clickArrow(move, arrow):
 	paintArrow(arrow, colors[move])
@@ -137,7 +120,6 @@ def paintColor(move):
 	coor = colorsXY[move]
 	gradient = getGradient(move, colors[move], (coor[2], coor[3]))
 	background.blit(gradient, (coor[0], coor[1]))
-	#pygame.draw.rect(background, colors[move], colorsXY[move])
 
 def getGradient(move, color, coor):
 	white = (WHITE[0], WHITE[1], WHITE[2], 0)
